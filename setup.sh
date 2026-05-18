@@ -13,8 +13,8 @@ clone_or_pull() {
   local dir_name=$2
 
   if [ -d "$WORKSPACE_DIR/$dir_name/.git" ]; then
-    echo "  ✓ $dir_name already exists — pulling latest..."
-    git -C "$WORKSPACE_DIR/$dir_name" pull
+    echo "  ✓ $dir_name already exists — fetching latest..."
+    git -C "$WORKSPACE_DIR/$dir_name" fetch --all --prune
   else
     echo "  → Cloning $dir_name..."
     git clone "$repo_url" "$WORKSPACE_DIR/$dir_name"
