@@ -23,10 +23,13 @@ clone_or_pull() {
 
 clone_or_pull "https://github.com/harshkurra/resume-builder-frontend.git" "resume-builder-frontend"
 clone_or_pull "https://github.com/harshkurra/resume-builder-service.git" "resume-builder-service"
+clone_or_pull "https://github.com/harshkurra/resume-template-builder.git" "resume-template-builder"
+clone_or_pull "https://github.com/harshkurra/resume-template-builder-v2.git" "resume-template-builder-v2"
 
 echo ""
 echo "Done! Workspace is ready."
 echo ""
 echo "Next steps:"
-echo "  cd resume-builder-frontend && yarn install && yarn start"
-echo "  cd resume-builder-service  && npm install && npm run start:dev"
+echo "  cd resume-builder-frontend  && yarn install && yarn start"
+echo "  cd resume-builder-service   && npm install && npm run start:dev"
+echo "  cd resume-template-builder-v2 && npm install && npm run build  # preferred for new templates"

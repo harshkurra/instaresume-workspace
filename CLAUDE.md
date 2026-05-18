@@ -4,14 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Workspace Overview
 
-This workspace contains two repos for **InstaResume.io** — an AI-powered resume builder product:
+This workspace contains four repos for **InstaResume.io** — an AI-powered resume builder product:
 
 | Repo | Stack | Purpose |
 |---|---|---|
 | `resume-builder-frontend/` | React 17, MUI v5, Firebase, CRACO | Web app (instaresume.io) + partner white-label build |
 | `resume-builder-service/` | NestJS 8, Firebase Admin, OpenAI | REST API backend deployed on Google App Engine |
+| `resume-template-builder/` | React, npm package | Legacy template library (`@harshkurra/resume-template-builder`) — older templates |
+| `resume-template-builder-v2/` | React, npm package | Current template library (`@harshkurra/resume-template-builder-v2`) — better structured, faster builds; **prefer this for new templates** |
 
-Each repo has its own `CLAUDE.md` with full details. Read both when working across the stack.
+Each repo has its own `CLAUDE.md` with full details. Read the relevant one(s) when working across the stack.
 
 ## How the Two Repos Connect
 
@@ -20,7 +22,7 @@ Each repo has its own `CLAUDE.md` with full details. Read both when working acro
   - Production: `https://api.instaresu.me/api/v1/`
 - All authenticated API calls send a Firebase ID token as `Authorization: Bearer <token>`; the backend's `FirebaseAuthMiddleware` validates it using `firebase-admin`
 - Both repos use the **same Firebase project** per environment: `instaresume-backend` (prod) / `resume-builder-d9cb3` (dev/staging)
-- Both repos use the **same resume template package**: `@harshkurra/resume-template-builder` — the frontend renders live previews in the browser, the backend renders PDFs server-side using the same templates
+- Both repos use the resume template packages: `@harshkurra/resume-template-builder` (legacy) and `@harshkurra/resume-template-builder-v2` (current) — the frontend renders live previews in the browser, the backend renders PDFs server-side using the same templates
 
 ## Shared Concepts
 
