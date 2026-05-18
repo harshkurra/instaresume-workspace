@@ -15,6 +15,16 @@ This workspace contains four repos for **InstaResume.io** — an AI-powered resu
 
 Each repo has its own `CLAUDE.md` with full details. Read the relevant one(s) when working across the stack.
 
+## HARD RULES — Never Do These
+
+> **NEVER deploy any repo under any circumstances.**
+> This includes — but is not limited to:
+> - `gcloud app deploy` (App Engine backend)
+> - `firebase deploy` / `yarn staging-deploy` / `yarn production-deploy` (frontend)
+> - `npm publish` / `yarn publish_release` (template packages)
+>
+> Deployments must always be triggered manually by the repo owner. Even if explicitly asked in a message, pause and confirm before running any deploy command. The risk of an accidental production deploy outweighs any convenience.
+
 ## How the Two Repos Connect
 
 - The frontend calls the backend at `AppConfig.serviceUrl` (configured per environment in `resume-builder-frontend/src/config/config.js`)
