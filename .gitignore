@@ -1,0 +1,9 @@
+# Sub-repos — managed independently, cloned via setup.sh
+resume-builder-frontend/
+resume-builder-service/
+
+# Claude local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# macOS
+.DS_Store
