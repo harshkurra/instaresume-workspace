@@ -11,9 +11,9 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 
 | # | Item | Effort | Importance | Status | Notes |
 |---|------|--------|------------|--------|-------|
-| 1 | Update Node version for backend service | Easy | Low | `[~]` In Progress | PR #48 merged — needs testing + deploy to production |
-| 2 | Update deprecated LLM models | Easy | High | `[ ]` Todo | OpenAI SDK in backend — find all model ID strings (e.g. gpt-3.5-turbo variants), upgrade to current supported models |
-| 3 | Resolve ads vs paid users conflict | Easy | High | `[ ]` Todo | Paying users / users with credits shouldn't see ads — gate ad serving on subscription/credit status in auth context |
+| 1 | Update Node version for backend service | Easy | Low | `[x]` Done | PR #55 merged; running nodejs22 on App Engine production |
+| 2 | Update deprecated LLM models | Easy | High | `[x]` Done | PR #57 merged: centralised AI model config (`src/config/ai-models.config.ts`), migrated `gpt-3.5-turbo-instruct` off legacy completions API, paid users (`adFreeCredits` present) get `gpt-4.1-mini`, free users get `gpt-4o-mini`, B2B tiers use `gpt-4.1-mini`/`gpt-4.1` |
+| 3 | Resolve ads vs paid users conflict | Easy | High | `[~]` In Progress | **Findings:** Backend already sets `IR_RISE` HttpOnly cookie after every completed payment (`payments.controller.ts:53`). Paid signal in Firestore: `adFreeCredits` written on every purchase. Two bugs to fix: (1) `maxAge` passes UNIX seconds instead of ms — fix: `(expiryTimestamp - now) * 1000`; (2) `SECRET_KEY` hardcoded in `firebase/utils.ts`, move to env var. Frontend has zero reads of `IR_RISE` — needs wiring to gate ads. |
 | 4 | Set up workspace as GitHub repo with skills/agents | Easy | Medium | `[x]` Done | This repo (`instaresume-workspace`) |
 | 5 | Consistent CREATE NEW menu across all document types | Medium | High | `[ ]` Todo | Resume has 8 options; Cover Letters / Resignation Letters have only a plain button; Bio Data has only "Blank Bio Data". All 4 types should have feature parity |
 | 6 | Blog creation workflow improvement via Sanity | Medium | Medium | `[ ]` Todo | Streamline the Sanity CMS blog publishing process; reduce manual steps |
@@ -29,3 +29,5 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 ## Session Log
 - **2026-05-12**: Roadmap created
 - **2026-05-18**: Item 4 done — workspace pushed to `harshkurra/instaresume-workspace`
+- **2026-08-21**: Item 1 done — PR #55 merged, nodejs22 live on App Engine production
+- **2026-08-22**: Item 2 done — PR #57 merged. Item 3 moved to In Progress — findings captured above.
