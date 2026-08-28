@@ -31,6 +31,7 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 | 18 | Improve resume ATS score journey | Medium | High | `[ ]` Todo | End-to-end UX improvement for the resume scoring flow — clearer score breakdown, better guidance on what to fix, smoother "Improve score" action and result review. |
 | 19 | Resume picker dropdown in cover letter generator | Easy | High | `[ ]` Todo | In the "Create cover letter from resume" dialog/flow, add a dropdown listing the user's existing resumes so they can pick one directly instead of having to navigate away. |
 | 20 | Anonymous auth funnel — landing page → AI flow without login | High | High | `[ ]` Todo | Use Firebase `signInAnonymously()` to let landing page visitors run the AI creation flow immediately, then upgrade to real account on save/download via `linkWithCredential()`. Full plan in `docs/anonymous-auth-funnel.md`. |
+| 21 | Expand pre-filled role templates from 17 → 50 via AI generation script | Medium | High | `[ ]` Todo | Script pipeline: (1) use AI to generate valid resume JSON for each new role, (2) render thumbnail via Puppeteer/Playwright screenshot of the frontend builder or backend PDF→image, (3) upload thumbnail to Firebase/GCS, (4) add template entry to codebase. Target 50 roles covering all major job categories. |
 
 ## Session Log
 - **2026-05-12**: Roadmap created
@@ -38,4 +39,4 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 - **2026-08-21**: Item 1 done — PR #55 merged, nodejs22 live on App Engine production
 - **2026-08-22**: Item 2 done — PR #57 merged. Item 3 moved to In Progress — findings captured above.
 - **2026-08-26**: Item 5 done — CREATE NEW menus redesigned across all document types, mobile bottom sheet shipped. Items 15–17 added from prod testing findings.
-- **2026-08-28**: Item 15 done — zero state shipped for all document types (PR #490). Item 20 added — anonymous auth funnel; implementation plan at `docs/anonymous-auth-funnel.md`.
+- **2026-08-28**: Item 15 done — zero state shipped for all document types (PR #490). Items 20–21 added — anonymous auth funnel and pre-filled template expansion script.
