@@ -1,7 +1,7 @@
 # "Create with AI" Flow — Design Spec
 
-New lightweight dialog for zero state — replaces the existing "Tailor resume as
-per job description" dialog when triggered from the zero state hero card.
+New dialog for zero state — replaces the existing "Tailor resume as per job
+description" dialog when triggered from the zero state hero card.
 
 The existing tailor dialog stays unchanged for its current use case (tailoring an
 existing resume to a JD). This is a separate, new entry point.
@@ -10,119 +10,233 @@ existing resume to a JD). This is a separate, new entry point.
 
 ## Problem with the current dialog for zero state
 
-The "Tailor resume as per job description" dialog (Image #20–22) has these issues
-when used as a first-resume creation flow:
+The "Tailor your resume as per job description" dialog has these issues when used
+as a first-resume creation flow:
 
-1. **Wrong title and framing** — "Tailor your resume as per job description"
-   implies the user already has a resume. Zero state users don't.
-2. **JD is required and takes most of the screen** — a first-time user doesn't
-   have a job description in mind; they just want a good resume.
-3. **Scrollable, multi-section layout** — YOUR DETAILS → JOB INFORMATION → YOUR
-   RESUME → Add Experience → Add Education is too many steps for a cold start.
-4. **Cluttered inputs** — phone number, writing style, email all distract from the
-   core job: generate a good resume.
+1. **Wrong framing** — "Tailor" implies the user already has a resume to tailor.
+2. **JD required** — a zero state user doesn't have a job they're targeting yet.
+3. **Long scrollable form** — YOUR DETAILS → JOB INFORMATION → YOUR RESUME →
+   Experience → Education is overwhelming for a cold start.
+4. **Cluttered inputs** — phone, writing style, email distract from the core ask.
 
 ---
 
-## New Flow — "Create your resume with AI"
+## Competitive Reference — resume.io
 
-### Overview
+resume.io's AI flow (studied 2026-08-28):
 
-2-step compact dialog. No JD. User tells us their role and optionally gives
-background context (either by uploading an existing resume or typing a short bio).
-AI generates a complete resume draft.
+| Screen | Content | Skip? |
+|---|---|---|
+| 1 | LinkedIn profile URL | Yes |
+| 2 | Work experience (title + company + dates, up to 3) | No |
+| 3 | Desired job title | No |
+| 4 | Education (institution + degree + dates) | Yes |
+| 5 | Skills (tag input with suggestions) | Yes |
+| 6 | Professional highlights (voice or text) | Yes |
+| 7 | Career goals (voice or text) | Yes |
+| 8 | "AI Assistant at work" loading screen | — |
+
+**What they got right:**
+- One focused question per screen — zero cognitive load per step
+- Progress bar with `% Completed` — builds commitment momentum
+- Skip on every optional step — removes anxiety
+- Voice input on open-ended steps — talking is faster than typing
+
+**What's too much for our context:**
+- 7 data-collection screens before generating — too long for a zero state user
+  who hasn't committed yet
+- LinkedIn scraping — technically complex (third-party service), skip for now
+- Voice input — interesting future roadmap item but not MVP
 
 ---
 
-### Step 1 — Your Role
+## Our Approach — 3-Step Flow
+
+**Design principles borrowed from resume.io:**
+- `✦ AI-powered Resume` badge at top of every screen (trust signal)
+- One focused heading per screen, large and centred
+- Progress bar with `% Completed` at the bottom
+- Back / Skip / Continue button pattern
+- Skip available on steps 2 and 3
+
+**What we keep lean:**
+- 3 screens max (vs. resume.io's 7+)
+- Upload path on step 2 skips step 3 entirely → generate immediately
+- No voice input in MVP
+
+---
+
+### Step 1 — Who You Are
+*Required. ~10 seconds.*
 
 ```
-┌──────────────────────────────────────────┐
-│  ✕                      1 of 2  ● ○      │
-│                                          │
-│  Let's build your resume                 │
-│  Tell us your role — we'll write the     │
-│  rest.                                   │
-│                                          │
-│  Your name                               │
-│  ┌─────────────────────────────────┐    │
-│  │  First name                     │    │
-│  └─────────────────────────────────┘    │
-│                                          │
-│  Job title *                             │
-│  ┌─────────────────────────────────┐    │
-│  │  e.g. Software Engineer         │    │
-│  └─────────────────────────────────┘    │
-│                                          │
-│  Experience level                        │
-│  ┌────────┐ ┌───────┐ ┌───────┐        │
-│  │ Fresher│ │ 0–2 y │ │ 2–5 y │ ...   │
-│  └────────┘ └───────┘ └───────┘        │
-│                                          │
-│                          [Next  →]       │
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  ✕                                           │
+│                                              │
+│         ✦ AI-powered Resume                  │
+│                                              │
+│    Let's build your resume                   │
+│    Tell us your role — we'll write           │
+│    the rest.                                 │
+│                                              │
+│  First name (optional)                       │
+│  ┌────────────────────────────────────┐     │
+│  │  e.g. Brian                        │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Job title *                                 │
+│  ┌────────────────────────────────────┐     │
+│  │  e.g. Software Engineer            │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Experience level                            │
+│  [Fresher] [0–2 yrs] [2–5 yrs]             │
+│  [5–10 yrs] [10+ yrs]                       │
+│                                              │
+│                         [Continue →]         │
+│                                              │
+│  ○ 0% Completed  ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱       │
+└──────────────────────────────────────────────┘
 ```
 
 **Fields:**
-- First name (optional — used to personalise the resume header)
-- Job title (required)
-- Experience level pill selector — single select:
-  `Fresher` · `0–2 yrs` · `2–5 yrs` · `5–10 yrs` · `10+ yrs`
+- First name — optional, personalises the resume header
+- Job title — required, "Continue" disabled until non-empty
+- Experience level — single-select chip group, defaults to nothing selected
+  (AI infers from context if skipped)
 
 **UX notes:**
-- No email, phone, last name at this stage — they fill those in the builder
-- Experience level chips auto-select "Fresher" if nothing chosen (safe default)
-- "Next" is enabled as soon as job title is non-empty
+- No email, phone, last name — fill in the builder later
+- Chips are mutually exclusive, teal fill on selection
+- Progress: 0%
 
 ---
 
 ### Step 2 — Your Background
+*Optional. Two mutually exclusive paths.*
 
 ```
-┌──────────────────────────────────────────┐
-│  ← Back                 2 of 2  ● ●      │
-│                                          │
-│  Add your background (optional)          │
-│  The more we know, the better the        │
-│  resume. Skip to go with a template.     │
-│                                          │
-│  ┌──────────────────────────────────┐   │
-│  │  📄                              │   │
-│  │  Drop your resume here           │   │
-│  │  PDF · DOCX · TXT                │   │
-│  │  [Browse files]                  │   │
-│  └──────────────────────────────────┘   │
-│                                          │
-│  ─────────────── or ───────────────      │
-│                                          │
-│  Describe yourself in a few sentences    │
-│  ┌──────────────────────────────────┐   │
-│  │  e.g. 5 years as a React dev,   │   │
-│  │  built e-commerce platforms,     │   │
-│  │  led a 4-person team…            │   │
-│  └──────────────────────────────────┘   │
-│                                          │
-│  Credits: 1    [Skip  →]  [Generate →]  │
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  ← Back                                   ✕  │
+│                                              │
+│         ✦ AI-powered Resume                  │
+│                                              │
+│    Add your background                       │
+│    More context = better resume.             │
+│                                              │
+│  ┌──────────────────────────────────────┐   │
+│  │  📄  Drop your resume here           │   │
+│  │      PDF · DOCX · TXT               │   │
+│  │      [Browse files]                  │   │
+│  └──────────────────────────────────────┘   │
+│                                              │
+│  ────────────────── or ───────────────────   │
+│                                              │
+│  Add your top jobs (up to 3)                 │
+│                                              │
+│  Job title        Company        From   To   │
+│  ┌──────────┐  ┌──────────┐  ┌──┐  ┌──┐   │
+│  │          │  │          │  │  │  │  │   │
+│  └──────────┘  └──────────┘  └──┘  └──┘   │
+│  + Add another job                          │
+│                                              │
+│  [Back]          [Skip]      [Continue →]    │
+│                                              │
+│  ● 33% Completed  ▓▓▓▓▓▱▱▱▱▱▱▱▱▱▱▱▱▱       │
+└──────────────────────────────────────────────┘
 ```
 
-**Fields:**
-- File drop zone — PDF / DOCX / TXT (same parsing as existing import flow)
-- OR free-text bio (textarea, ~4 rows, placeholder guides the user)
-- Both are optional — "Skip" generates a clean template-based resume for the role
+**Two paths (mutually exclusive):**
+
+**Path A — Upload:**
+- Drop zone accepting PDF / DOCX / TXT
+- On upload → file name shown, manual job entry section hides
+- "Continue" goes straight to generate (skips step 3), because the file
+  already contains education and skills
+
+**Path B — Manual jobs:**
+- Inline compact row: Job title | Company | From MM/YYYY | To MM/YYYY (or "Present")
+- "+ Add another job" adds a second row, max 3
+- At least one job title must be non-empty to enable "Continue" on this path
+- No descriptions — AI writes those
 
 **UX notes:**
-- If file is uploaded, text area hides (they're mutually exclusive)
-- "Skip" is a legitimate path — just creates a role-appropriate blank resume
-- Credit count shown in footer, same as existing dialog
-- "Generate" button label: `Generate Resume ✦` (match existing teal button style)
+- Upload and manual are mutually exclusive — selecting one clears the other
+- "Skip" is valid — generates a role-appropriate resume with just step 1 data
+- Progress: 33%
 
 ---
 
-### Loading State
+### Step 3 — Quick Extras
+*Optional. Skip available on each sub-section.*
 
-Reuse the existing `tailorResumeLoaderDialog` with copy updated to:
-- "Building your resume…" instead of "Tailoring your resume…"
+```
+┌──────────────────────────────────────────────┐
+│  ← Back                                   ✕  │
+│                                              │
+│         ✦ AI-powered Resume                  │
+│                                              │
+│    Almost there                              │
+│    Optional extras that improve the draft.   │
+│                                              │
+│  Education (optional)                        │
+│  ┌────────────────────────────────────┐     │
+│  │  Institution name                  │     │
+│  └────────────────────────────────────┘     │
+│  ┌────────────────────────────────────┐     │
+│  │  Degree / field of study           │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Top skills (optional)                       │
+│  [React ×] [Node.js ×] [Python ×]  [+ Add] │
+│  Suggestions: TypeScript · AWS · Docker      │
+│                                              │
+│  Anything else? (optional)                   │
+│  ┌────────────────────────────────────┐     │
+│  │  Achievements, certs, career       │     │
+│  │  goals, anything relevant…         │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  [Back]               [Generate Resume ✦]   │
+│  Credits: 1                                  │
+│                                              │
+│  ● 66% Completed  ▓▓▓▓▓▓▓▓▓▱▱▱▱▱▱▱▱▱       │
+└──────────────────────────────────────────────┘
+```
+
+**Fields:**
+- Education — institution name + degree (one entry, no dates needed)
+- Skills — tag chip input; suggestions generated from job title on the frontend
+  (static map: `{ "Software Engineer": ["React", "Node.js", "Python", …] }` to
+  start; can later be AI-generated)
+- Free-text — achievements, certifications, career goals, anything they want
+  the AI to know
+
+**UX notes:**
+- All three sub-sections are individually optional — "Generate" always enabled
+- Skills suggestions based on job title from step 1 (hardcoded map for MVP)
+- Progress: 66%
+
+---
+
+### Loading Screen
+*After Generate is clicked.*
+
+```
+┌──────────────────────────────────────────────┐
+│                                              │
+│              ✦                              │
+│           ═══════                            │
+│              +                               │
+│                                              │
+│      Building your resume…                   │
+│   You can still edit everything after.       │
+│                                              │
+│  ● 100% Completed  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓      │
+└──────────────────────────────────────────────┘
+```
+
+Reuse the existing `tailorResumeLoaderDialog` — just update the heading copy.
 
 ---
 
@@ -137,22 +251,27 @@ POST /secure/generative-ai/resume/create
 **Request body:**
 ```json
 {
-  "jobTitle": "Software Engineer",
-  "yearsOfExperience": "2-5",
   "firstName": "Brian",
-  "resumeText": "...",          // if file uploaded — extracted text
-  "backgroundText": "..."       // if typed bio provided
+  "jobTitle": "Software Engineer",
+  "experienceLevel": "2-5 years",
+  "workExperiences": [
+    { "title": "Frontend Developer", "company": "Acme Inc", "from": "Jan 2022", "to": "Present" }
+  ],
+  "resumeText": "...",         // if file uploaded — extracted text (replaces workExperiences)
+  "education": { "institution": "MIT", "degree": "B.Sc Computer Science" },
+  "skills": ["React", "Node.js", "Python"],
+  "additionalContext": "..."   // free-text from the "anything else" field
 }
 ```
 
-**Why a new endpoint, not the existing tailor/jd:**
-- The tailor prompt is built around diffing user resume vs. JD — wrong framing
-- The create prompt should be: "Generate a complete, realistic resume for a
-  [yearsOfExperience] [jobTitle]. Use the background provided to personalise it.
-  If no background is provided, write a strong generic version for the role."
-- Different system prompt, different output shape expectations
+**AI prompt framing** (different from the tailor prompt):
+> "Generate a complete, ATS-friendly resume in JSON format for a [experienceLevel]
+> [jobTitle] named [firstName]. Use the background information provided to write
+> specific, achievement-focused bullet points. Where background is missing,
+> write strong, realistic placeholder content appropriate for the experience level
+> and role. Do not mention that content is placeholder."
 
-**Response:** same resume JSON format as existing tailor endpoint
+**Response:** same resume JSON format as the existing tailor endpoint
 ```json
 {
   "text": { ...resumeJSON },
@@ -161,56 +280,71 @@ POST /secure/generative-ai/resume/create
 }
 ```
 
-**Credit cost:** 1 credit (same as tailor)
+**Credit cost:** 1 (same as tailor)
 
 ### Reuse what you can
 
-- PDF/DOCX/TXT text extraction — already exists in `extractTextFromPdf` /
-  existing import service
-- Resume JSON save + navigate to builder — same as tailor flow post-success
-- Credit deduction middleware — no changes
+| Existing piece | Reused how |
+|---|---|
+| `extractTextFromPdf` | PDF/DOCX/TXT → resumeText on upload |
+| Resume JSON save + navigate to builder | Identical post-success flow |
+| Credit deduction middleware | No changes |
+| `tailorResumeLoaderDialog` | Loading screen, updated copy only |
 
 ---
 
-## Frontend Files to Create / Change
+## Frontend File Plan
 
-| File | Action | Notes |
-|---|---|---|
-| `src/pages/Resumes/createResumeDialog/` | Create new folder | New dialog component |
-| `src/pages/Resumes/createResumeDialog/index.js` | Create | Main 2-step dialog |
-| `src/pages/Resumes/createResumeDialog/StepRole.js` | Create | Step 1 component |
-| `src/pages/Resumes/createResumeDialog/StepBackground.js` | Create | Step 2 component |
-| `src/utils/service.js` | Edit | Add `createResumeWithAI()` API call |
-| `src/utils/index.js` | Edit | Add `dialogKeys.createResumeDialog` |
-| `src/pages/Resumes/ResumeDialogs.js` | Edit | Mount new dialog on the key |
-| `src/pages/Resumes/resumes.js` | Edit | Zero state hero onClick → new dialog key |
-| `src/pages/Resumes/MobileCreateSheet.js` | Edit | "Tailor an existing resume" stays; new key for zero state path |
+| File | Action |
+|---|---|
+| `src/pages/Resumes/createResumeDialog/index.js` | Create — orchestrates 3 steps + state |
+| `src/pages/Resumes/createResumeDialog/StepRole.js` | Create — step 1 |
+| `src/pages/Resumes/createResumeDialog/StepBackground.js` | Create — step 2 (upload or manual jobs) |
+| `src/pages/Resumes/createResumeDialog/StepExtras.js` | Create — step 3 (education, skills, free-text) |
+| `src/pages/Resumes/createResumeDialog/ProgressBar.js` | Create — shared % progress footer |
+| `src/utils/service.js` | Edit — add `createResumeWithAI()` |
+| `src/utils/index.js` | Edit — add `dialogKeys.createResumeDialog` |
+| `src/pages/Resumes/ResumeDialogs.js` | Edit — mount new dialog |
+| `src/pages/Resumes/resumes.js` | Edit — zero state hero onClick → new key |
+| `src/pages/Resumes/MobileCreateSheet.js` | Edit — "Tailor" stays; new key for zero state |
 
 ---
 
-## Key Differences from Existing Dialog
+## Comparison
 
-| | Existing "Tailor" dialog | New "Create" dialog |
-|---|---|---|
-| Title | Tailor your resume as per job description | Let's build your resume |
-| JD field | Required | Removed entirely |
-| Steps | Single long scrollable form | 2 short screens |
-| Experience level | Not asked | Chip selector |
-| Background | Upload OR add experience/education fields | Upload OR free-text bio |
-| Email / Phone | Asked upfront | Skipped (fill in builder) |
-| Empty submit | Generates generic JD-matched resume | Generates role-appropriate blank |
-| Trigger | "Tailor an existing resume" in create menu | Zero state hero card only |
+| | Existing "Tailor" dialog | resume.io | New "Create" dialog |
+|---|---|---|---|
+| Screens | 1 long scroll | 7+ | 3 focused |
+| JD field | Required | None | None |
+| Experience level | Not asked | Via work history | Chip selector |
+| Work history | Optional accordion | Required (1+) | Optional (up to 3 rows) |
+| Education | Optional accordion | Optional | Optional (1 entry) |
+| Skills | Not asked | Tag input | Tag input + suggestions |
+| Voice input | No | Yes | No (future item) |
+| LinkedIn | No | Yes (step 1) | No (future item) |
+| Upload path | Yes (PDF only) | No | Yes (PDF/DOCX/TXT), skips step 3 |
+| Progress indicator | No | Yes (%) | Yes (%) |
+| Skip available | No | Most steps | Steps 2 and 3 |
+
+---
+
+## Future Items (not MVP)
+
+- **Voice input** — Web Speech API or OpenAI Whisper for the free-text field
+- **LinkedIn URL** — third-party parsing service; surface as optional step 0
+- **AI-generated skill suggestions** — call backend with job title, get ranked
+  skills list instead of a static map
 
 ---
 
 ## Open Questions
 
-1. Should "Create with AI" from the **create menu** (non-zero-state, when user
-   already has resumes) go to the new dialog or the existing tailor dialog?
-   Recommendation: keep existing tailor dialog there; new dialog is zero-state only.
+1. Should "Create with AI" from the **create menu** (when user already has resumes)
+   go to this new dialog or the existing tailor dialog?
+   *Recommendation: existing tailor dialog — different intent.*
 
-2. Does the backend AI prompt need the experience level mapped to years string,
-   or a human-readable label? (e.g. `"2-5"` vs `"2–5 years of experience"`)
+2. Skill suggestions for MVP — static job→skills map in the frontend, or a
+   lightweight backend call?
 
-3. Should "Skip" on step 2 still cost a credit? Probably yes — it still calls the
-   backend to generate a role-appropriate template.
+3. Should the upload path on step 2 skip step 3, or always show step 3?
+   *Recommendation: skip step 3 — the file already has the education/skills data.*
