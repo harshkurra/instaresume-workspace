@@ -46,12 +46,13 @@ steps, `✦ AI-powered Resume` badge.
 | | `create` mode | `tailor` mode |
 |---|---|---|
 | Trigger | Zero state hero card | "Tailor an existing resume" in create menu |
-| Steps | 3 | 2 |
-| Step 1 | Who you are (name, job title, experience chips) | Job description (required) + highlight hint |
-| Step 2 | Background (upload OR manual job rows) | Resume source (pick existing / upload / manual) |
-| Step 3 | Extras (education, skills, free-text) + optional JD (collapsed) | — |
-| JD field | Optional, collapsed in Step 3 | Required, Step 1 hero |
+| Steps | 3 | 3 |
+| Step 1 | Who you are (name, email, job title, experience chips) | Who you are (name, email, job title) — same screen, pre-filled from profile |
+| Step 2 | Background (upload OR manual job rows) | Job description (required) + highlight hint |
+| Step 3 | Extras (education, skills, free-text) + optional JD (collapsed) | Resume source (pick existing / upload / manual) |
+| JD field | Optional, collapsed in Step 3 | Required, Step 2 hero |
 | Resume source | Upload or manual rows | Pick from InstaResume OR upload OR manual |
+| Personal details | Step 1 | Step 1 (pre-filled from Firebase profile if available) |
 | CTA label | `Generate Resume ✦` | `Tailor Resume ✦` |
 | Backend endpoint | `POST /secure/generative-ai/resume/create` (new) | `POST /secure/generative-ai/resume/tailor/jd` (existing) |
 | Credits | 1 | 1 |
@@ -188,16 +189,19 @@ steps, `✦ AI-powered Resume` badge.
 
 ---
 
-## Tailor Mode — 2 Steps (JD Required)
+## Tailor Mode — 3 Steps (symmetric with create mode)
 
-Replaces the existing `buildResumeFromJobDescription.js` dialog entirely.
-Same step-by-step pattern as create mode — JD comes first since that's the
-whole point, then the user provides their resume context.
+Replaces `buildResumeFromJobDescription.js` entirely. Both modes now share the
+same Step 1 so personal details are always captured — important when the user
+doesn't provide an existing resume and the AI has nothing to pull a name from.
+
+Step 1 is pre-filled from the Firebase user profile where available (name, email)
+so returning users fly through it.
 
 ---
 
-### Tailor Step 1 — The Job
-*Required. JD must be non-empty to continue.*
+### Tailor Step 1 — Who You Are
+*Same component as create mode Step 1, minus experience chips.*
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -205,8 +209,52 @@ whole point, then the user provides their resume context.
 │         ✦  AI-powered Resume                 │
 │                                              │
 │    Tailor your resume to a job               │
-│    Paste the job description — we'll         │
-│    rewrite your resume to match it.          │
+│    A few details first — we'll handle        │
+│    the rest.                                 │
+│                                              │
+│  First name *                                │
+│  ┌────────────────────────────────────┐     │
+│  │  Brian           (pre-filled)      │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Last name                                   │
+│  ┌────────────────────────────────────┐     │
+│  │  Test            (pre-filled)      │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Email                                       │
+│  ┌────────────────────────────────────┐     │
+│  │  brian@gmail.com (pre-filled)      │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  Job title *                                 │
+│  ┌────────────────────────────────────┐     │
+│  │  e.g. Software Engineer            │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│                         [Continue →]         │
+│  ○ 0% Completed  ░░░░░░░░░░░░░░░░░░         │
+└──────────────────────────────────────────────┘
+```
+
+- First name and job title: required
+- Last name and email: optional but pre-filled from profile — most users won't
+  need to touch this step at all
+- No experience chips (not relevant for tailoring)
+- Progress: 0%
+
+---
+
+### Tailor Step 2 — The Job
+*JD required. "Continue" gated on it.*
+
+```
+┌──────────────────────────────────────────────┐
+│  ← Back                                   ✕  │
+│         ✦  AI-powered Resume                 │
+│                                              │
+│    Paste the job description                 │
+│    We'll rewrite your resume to match it.    │
 │                                              │
 │  Job description *                           │
 │  ┌────────────────────────────────────┐     │
@@ -221,19 +269,18 @@ whole point, then the user provides their resume context.
 │  │  projects you want prioritised…    │     │
 │  └────────────────────────────────────┘     │
 │                                              │
-│                         [Continue →]         │
-│  ○ 0% Completed  ░░░░░░░░░░░░░░░░░░         │
+│  [Back]                     [Continue →]     │
+│  ● 33% Completed  ████░░░░░░░░░░░░░░░       │
 └──────────────────────────────────────────────┘
 ```
 
 - JD textarea: required; "Continue" disabled until non-empty
-- "Anything to highlight": optional free-text for skills/certs/projects to
-  prioritise — helps the AI emphasis the right things
-- Progress: 0%
+- "Anything to highlight": optional — skills/certs/projects to prioritise
+- Progress: 33%
 
 ---
 
-### Tailor Step 2 — Your Resume
+### Tailor Step 3 — Your Resume
 *At least one source required.*
 
 ```
@@ -343,11 +390,11 @@ Existing request shape and prompt unchanged.
 | File | Action |
 |---|---|
 | `src/pages/Resumes/aiResumeDialog/index.js` | Create — root dialog, `mode` prop, step router |
-| `src/pages/Resumes/aiResumeDialog/StepRole.js` | Create — step 1 (create mode) |
-| `src/pages/Resumes/aiResumeDialog/StepBackground.js` | Create — step 2 (create mode) |
-| `src/pages/Resumes/aiResumeDialog/StepExtras.js` | Create — step 3 + collapsible JD (create mode) |
-| `src/pages/Resumes/aiResumeDialog/StepTailorJd.js` | Create — tailor step 1 (JD + highlight hint) |
-| `src/pages/Resumes/aiResumeDialog/StepTailorResume.js` | Create — tailor step 2 (pick existing / upload / manual) |
+| `src/pages/Resumes/aiResumeDialog/StepWhoYouAre.js` | Create — **shared step 1** (name, email, job title; experience chips in create mode only) |
+| `src/pages/Resumes/aiResumeDialog/StepBackground.js` | Create — create step 2 (upload OR manual jobs) |
+| `src/pages/Resumes/aiResumeDialog/StepExtras.js` | Create — create step 3 (education, skills, free-text, collapsible JD) |
+| `src/pages/Resumes/aiResumeDialog/StepTailorJd.js` | Create — tailor step 2 (JD required + highlight hint) |
+| `src/pages/Resumes/aiResumeDialog/StepTailorResume.js` | Create — tailor step 3 (pick existing / upload / manual) |
 | `src/pages/Resumes/aiResumeDialog/ProgressBar.js` | Create — shared % footer |
 | `src/utils/service.js` | Edit — add `createResumeWithAI()` |
 | `src/utils/index.js` | Edit — add `dialogKeys.aiResumeDialog` |
