@@ -46,11 +46,14 @@ steps, `✦ AI-powered Resume` badge.
 | | `create` mode | `tailor` mode |
 |---|---|---|
 | Trigger | Zero state hero card | "Tailor an existing resume" in create menu |
-| Steps shown | 1 → 2 → 3 | 1 (JD only) |
-| JD field | Optional, collapsed by default in Step 3 | Required, full-width, expanded |
-| Background (Step 2) | Shown — upload or manual jobs | Hidden — user has a resume already |
+| Steps | 3 | 2 |
+| Step 1 | Who you are (name, job title, experience chips) | Job description (required) + highlight hint |
+| Step 2 | Background (upload OR manual job rows) | Resume source (pick existing / upload / manual) |
+| Step 3 | Extras (education, skills, free-text) + optional JD (collapsed) | — |
+| JD field | Optional, collapsed in Step 3 | Required, Step 1 hero |
+| Resume source | Upload or manual rows | Pick from InstaResume OR upload OR manual |
 | CTA label | `Generate Resume ✦` | `Tailor Resume ✦` |
-| Backend endpoint | `POST /secure/generative-ai/resume/create` | `POST /secure/generative-ai/resume/tailor/jd` (existing) |
+| Backend endpoint | `POST /secure/generative-ai/resume/create` (new) | `POST /secure/generative-ai/resume/tailor/jd` (existing) |
 | Credits | 1 | 1 |
 
 ---
@@ -185,11 +188,16 @@ steps, `✦ AI-powered Resume` badge.
 
 ---
 
-## Tailor Mode — 1 Step (JD Required)
+## Tailor Mode — 2 Steps (JD Required)
 
 Replaces the existing `buildResumeFromJobDescription.js` dialog entirely.
-The selected/current resume is passed in as a prop and sent to the backend
-automatically — user doesn't re-enter their work history.
+Same step-by-step pattern as create mode — JD comes first since that's the
+whole point, then the user provides their resume context.
+
+---
+
+### Tailor Step 1 — The Job
+*Required. JD must be non-empty to continue.*
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -197,7 +205,7 @@ automatically — user doesn't re-enter their work history.
 │         ✦  AI-powered Resume                 │
 │                                              │
 │    Tailor your resume to a job               │
-│    Paste a job description and we'll         │
+│    Paste the job description — we'll         │
 │    rewrite your resume to match it.          │
 │                                              │
 │  Job description *                           │
@@ -205,25 +213,72 @@ automatically — user doesn't re-enter their work history.
 │  │  Paste the job description here…   │     │
 │  │                                    │     │
 │  │                                    │     │
-│  │                                    │     │
 │  └────────────────────────────────────┘     │
 │                                              │
 │  Anything to highlight? (optional)           │
 │  ┌────────────────────────────────────┐     │
-│  │  Specific skills, certs, projects  │     │
-│  │  you want prioritised…             │     │
+│  │  Specific skills, certs, or        │     │
+│  │  projects you want prioritised…    │     │
 │  └────────────────────────────────────┘     │
 │                                              │
-│              [Tailor Resume ✦]               │
-│  Credits: 1                                  │
+│                         [Continue →]         │
+│  ○ 0% Completed  ░░░░░░░░░░░░░░░░░░         │
 └──────────────────────────────────────────────┘
 ```
 
-- JD textarea: required; "Tailor Resume" disabled until non-empty
-- Optional context: replaces the old experience/education accordion (the existing
-  resume already has that data)
-- No steps / no progress bar — single screen, fast
-- Uses existing backend endpoint `tailor/jd` unchanged
+- JD textarea: required; "Continue" disabled until non-empty
+- "Anything to highlight": optional free-text for skills/certs/projects to
+  prioritise — helps the AI emphasis the right things
+- Progress: 0%
+
+---
+
+### Tailor Step 2 — Your Resume
+*At least one source required.*
+
+```
+┌──────────────────────────────────────────────┐
+│  ← Back                                   ✕  │
+│         ✦  AI-powered Resume                 │
+│                                              │
+│    Which resume should we tailor?            │
+│    Pick one, upload a file, or add           │
+│    your experience manually.                 │
+│                                              │
+│  Your InstaResume resumes                    │
+│  ┌────────────────────────────────────┐     │
+│  │  ○  Software Engineer — v1         │     │
+│  │  ○  Full Stack Resume — Draft      │     │
+│  │  ○  Startup Resume                 │     │
+│  └────────────────────────────────────┘     │
+│                                              │
+│  ─────────────────── or ──────────────────   │
+│                                              │
+│  ┌──────────────────────────────────────┐   │
+│  │  📄  Upload a resume file            │   │
+│  │      PDF · DOCX · TXT               │   │
+│  └──────────────────────────────────────┘   │
+│                                              │
+│  ─────────────────── or ──────────────────   │
+│                                              │
+│  ▼  Add experience manually                  │  ← collapsible
+│  Job title    Company     From      To        │
+│  ┌────────┐ ┌────────┐ ┌──────┐ ┌──────┐   │
+│  └────────┘ └────────┘ └──────┘ └──────┘   │
+│  + Add another job                           │
+│                                              │
+│  [Back]              [Tailor Resume ✦]       │
+│  Credits: 1                                  │
+│  ● 50% Completed  █████████░░░░░░░░░         │
+└──────────────────────────────────────────────┘
+```
+
+- **Pick from existing** — radio list of user's resumes in InstaResume; shown
+  only if they have saved resumes (resolves roadmap item 19)
+- **Upload** — PDF / DOCX / TXT; mutually exclusive with picking existing
+- **Manual** — collapsible; job rows same as create mode Step 2; last resort
+- "Tailor Resume" enabled as soon as any source is selected/filled
+- Progress: 50%
 
 ---
 
@@ -291,7 +346,8 @@ Existing request shape and prompt unchanged.
 | `src/pages/Resumes/aiResumeDialog/StepRole.js` | Create — step 1 (create mode) |
 | `src/pages/Resumes/aiResumeDialog/StepBackground.js` | Create — step 2 (create mode) |
 | `src/pages/Resumes/aiResumeDialog/StepExtras.js` | Create — step 3 + collapsible JD (create mode) |
-| `src/pages/Resumes/aiResumeDialog/StepTailor.js` | Create — single step (tailor mode) |
+| `src/pages/Resumes/aiResumeDialog/StepTailorJd.js` | Create — tailor step 1 (JD + highlight hint) |
+| `src/pages/Resumes/aiResumeDialog/StepTailorResume.js` | Create — tailor step 2 (pick existing / upload / manual) |
 | `src/pages/Resumes/aiResumeDialog/ProgressBar.js` | Create — shared % footer |
 | `src/utils/service.js` | Edit — add `createResumeWithAI()` |
 | `src/utils/index.js` | Edit — add `dialogKeys.aiResumeDialog` |
