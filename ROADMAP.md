@@ -32,6 +32,7 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 | 19 | Resume picker dropdown in cover letter generator | Easy | High | `[ ]` Todo | In the "Create cover letter from resume" dialog/flow, add a dropdown listing the user's existing resumes so they can pick one directly instead of having to navigate away. |
 | 20 | Anonymous auth funnel — landing page → AI flow without login | High | High | `[ ]` Todo | Use Firebase `signInAnonymously()` to let landing page visitors run the AI creation flow immediately, then upgrade to real account on save/download via `linkWithCredential()`. Full plan in `docs/anonymous-auth-funnel.md`. |
 | 21 | Expand pre-filled role templates from 17 → 50 via AI generation script | Medium | High | `[ ]` Todo | Script pipeline: (1) use AI to generate valid resume JSON for each new role, (2) render thumbnail via Puppeteer/Playwright screenshot of the frontend builder or backend PDF→image, (3) upload thumbnail to Firebase/GCS, (4) add template entry to codebase. Target 50 roles covering all major job categories. |
+| 22 | JD URL input — accept a job posting link instead of pasted text | Medium | High | `[ ]` Todo | Wherever a JD text field exists (tailor-to-JD dialog, cover letter from JD, ATS checker), add a "Paste a link" tab. Backend fetches and extracts the JD text server-side (avoids CORS), caches by URL. Covers LinkedIn, Indeed, Glassdoor, and generic job pages. Frontend only needs to pass the URL; extraction is transparent to the user. |
 
 ## Session Log
 - **2026-05-12**: Roadmap created
@@ -40,3 +41,4 @@ Ordered by **easy win + importance** — quickest high-impact items first.
 - **2026-08-22**: Item 2 done — PR #57 merged. Item 3 moved to In Progress — findings captured above.
 - **2026-08-26**: Item 5 done — CREATE NEW menus redesigned across all document types, mobile bottom sheet shipped. Items 15–17 added from prod testing findings.
 - **2026-08-28**: Item 15 done — zero state shipped for all document types (PR #490). Items 20–21 added — anonymous auth funnel and pre-filled template expansion script.
+- **2026-08-29**: Item 22 added — JD URL input as alternative to pasted text.
