@@ -25,6 +25,14 @@ Each repo has its own `CLAUDE.md` with full details. Read the relevant one(s) wh
 >
 > Deployments must always be triggered manually by the repo owner. Even if explicitly asked in a message, pause and confirm before running any deploy command. The risk of an accidental production deploy outweighs any convenience.
 
+> **NEVER push commits directly to `main` or `master`.**
+> This includes — but is not limited to:
+> - Direct `git push origin main` / `git push origin master`
+> - GitHub API file updates (`PUT /contents/...`) that target `main`/`master`
+> - Any commit or file change without an explicit request from the user
+>
+> Always create a new branch and open a PR. Never commit or push anything unless the user explicitly asks. Never push to the default branch under any circumstances.
+
 ## How the Two Repos Connect
 
 - The frontend calls the backend at `AppConfig.serviceUrl` (configured per environment in `resume-builder-frontend/src/config/config.js`)
