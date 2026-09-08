@@ -7,5 +7,8 @@ resume-template-builder-v2/
 # Claude local settings (machine-specific permissions)
 .claude/settings.local.json
 
+# Service account keys and credentials — never commit
+config/gcloud/*.json
+
 # macOS
 .DS_Store
