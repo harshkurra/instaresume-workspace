@@ -52,6 +52,33 @@ function cannyRequest(endpoint, body = {}) {
   });
 }
 
+// ── Markdown → HTML (minimal, covers bold/italic/bullets/headings) ───────────
+
+function mdToHtml(md) {
+  if (!md) return '';
+  return md
+    .split('\n')
+    .map((line) => {
+      // headings
+      if (/^### (.+)/.test(line)) return `<h3>${line.slice(4).trim()}</h3>`;
+      if (/^## (.+)/.test(line))  return `<h2>${line.slice(3).trim()}</h2>`;
+      if (/^# (.+)/.test(line))   return `<h1>${line.slice(2).trim()}</h1>`;
+      // bullets
+      if (/^[-*] (.+)/.test(line)) return `<li>${line.slice(2).trim()}</li>`;
+      // blank line
+      if (line.trim() === '') return '';
+      // paragraph
+      return `<p>${line.trim()}</p>`;
+    })
+    .join('\n')
+    // wrap adjacent <li> in <ul>
+    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
+    // inline bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
 // ── Tool definitions ─────────────────────────────────────────────────────────
 
 const TOOLS = [
@@ -118,19 +145,20 @@ const TOOLS = [
     description:
       'Create a new changelog entry (product update / release note). ' +
       'Use type "new" for new features, "improved" for enhancements, "fixed" for bug fixes. ' +
-      'Details supports markdown. Pass published: true to publish immediately, or omit to save as draft.',
+      'Details supports markdown (bold, bullets, headings) — converted to HTML automatically. ' +
+      'Omit published to save as draft; pass published: true to publish immediately.',
     inputSchema: {
       type: 'object',
       properties: {
         title:       { type: 'string',  description: 'Short headline for the changelog entry' },
-        details:     { type: 'string',  description: 'Full description in markdown (supports **bold**, bullet lists, etc.)' },
+        details:     { type: 'string',  description: 'Full description in markdown (supports **bold**, bullet lists, ## headings)' },
         type:        { type: 'string',  description: 'Entry type: new | improved | fixed' },
         published:   { type: 'boolean', description: 'true = publish immediately, false/omit = draft' },
         scheduledFor:{ type: 'string',  description: 'ISO 8601 date string to schedule publishing (optional)' },
         postIDs:     { type: 'array',   items: { type: 'string' }, description: 'Canny post IDs to link to this entry (optional)' },
         labelIDs:    { type: 'array',   items: { type: 'string' }, description: 'Label IDs to attach (optional)' },
       },
-      required: ['title', 'type'],
+      required: ['title', 'details', 'type'],
     },
   },
 ];
@@ -205,11 +233,10 @@ async function callTool(name, args) {
 
     case 'canny_create_entry': {
       const { title, details, type, published = false, scheduledFor, postIDs, labelIDs } = args;
-      const params = { title, type, published };
-      if (details)      params.markdownDetails = details;
-      if (scheduledFor) params.scheduledFor    = scheduledFor;
-      if (postIDs?.length)  params.postIDs  = postIDs;
-      if (labelIDs?.length) params.labelIDs = labelIDs;
+      const params = { title, type, published, details: mdToHtml(details) };
+      if (scheduledFor)     params.scheduledFor = scheduledFor;
+      if (postIDs?.length)  params.postIDs      = postIDs;
+      if (labelIDs?.length) params.labelIDs     = labelIDs;
       const res = await cannyRequest('entries/create', params);
       if (res.error) throw new Error(res.error);
       return { id: res.id, url: res.url, status: res.status, title: res.title };
