@@ -52,31 +52,25 @@ function cannyRequest(endpoint, body = {}) {
   });
 }
 
-// ── Markdown → HTML (minimal, covers bold/italic/bullets/headings) ───────────
+// ── Markdown → plain text (Canny stores details as plain text) ───────────────
 
-function mdToHtml(md) {
+function mdToPlain(md) {
   if (!md) return '';
   return md
     .split('\n')
     .map((line) => {
-      // headings
-      if (/^### (.+)/.test(line)) return `<h3>${line.slice(4).trim()}</h3>`;
-      if (/^## (.+)/.test(line))  return `<h2>${line.slice(3).trim()}</h2>`;
-      if (/^# (.+)/.test(line))   return `<h1>${line.slice(2).trim()}</h1>`;
-      // bullets
-      if (/^[-*] (.+)/.test(line)) return `<li>${line.slice(2).trim()}</li>`;
-      // blank line
-      if (line.trim() === '') return '';
-      // paragraph
-      return `<p>${line.trim()}</p>`;
+      // headings → UPPERCASE label with colon
+      if (/^### (.+)/.test(line)) return line.replace(/^### /, '').toUpperCase();
+      if (/^## (.+)/.test(line))  return line.replace(/^## /, '').toUpperCase();
+      if (/^# (.+)/.test(line))   return line.replace(/^# /, '').toUpperCase();
+      // bullets → unicode bullet
+      if (/^[-*] (.+)/.test(line)) return '• ' + line.replace(/^[-*] /, '');
+      // strip inline bold/italic markers
+      return line.replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+                 .replace(/\*\*(.+?)\*\*/g, '$1')
+                 .replace(/\*(.+?)\*/g, '$1');
     })
-    .join('\n')
-    // wrap adjacent <li> in <ul>
-    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
-    // inline bold + italic
-    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+    .join('\n');
 }
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
@@ -233,7 +227,7 @@ async function callTool(name, args) {
 
     case 'canny_create_entry': {
       const { title, details, type, published = false, scheduledFor, postIDs, labelIDs } = args;
-      const params = { title, type, published, details: mdToHtml(details) };
+      const params = { title, type, published, details: mdToPlain(details) };
       if (scheduledFor)     params.scheduledFor = scheduledFor;
       if (postIDs?.length)  params.postIDs      = postIDs;
       if (labelIDs?.length) params.labelIDs     = labelIDs;
