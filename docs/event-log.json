@@ -1,0 +1,33 @@
+{
+  "description": "GA4 event count log — snapshot the key events periodically to measure whether product changes are moving the numbers. Add a new entry under each event every time you pull data. Compare against the previous entry to see trend.",
+  "property_id": "330273037",
+  "snapshots": [
+    {
+      "date": "2026-09-06",
+      "period": "last_30_days",
+      "notes": "Baseline snapshot — pulled via GA4 MCP. Zero state events not yet live (tracking added on this date). Tailor dialog alert bug fixed. JD char limit raised to 3000 for all users.",
+      "events": [
+        { "event": "resume_download",          "count": 5198, "notes": "Core activation metric" },
+        { "event": "use_ai_writer",             "count": 840,  "notes": "AI writer panel opened" },
+        { "event": "scan_tailor",               "count": 631,  "notes": "ATS/tailor scan started" },
+        { "event": "generate_with_ai",          "count": 309,  "notes": "AI generation completed" },
+        { "event": "cover_download",            "count": 199,  "notes": "Cover letter PDF downloaded — 25× gap vs resume_download drove roadmap item 24" },
+        { "event": "zero_state_resume_create_ai",  "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_import",     "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_from_role",  "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_blank",      "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_cover_create_ai",   "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_cover_blank",       "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_bio_upload",        "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_bio_blank",         "count": 0, "notes": "Tracking just added — no data yet" }
+      ]
+    }
+  ],
+  "how_to_update": "Ask Claude: 'Pull the last 30 days GA4 data for the events in docs/event-log.json and add a new snapshot entry.' Claude will use the GA4 MCP server to fetch live counts and append a new dated entry.",
+  "what_to_watch": {
+    "zero_state_funnel": "zero_state_resume_create_ai should be the dominant zero-state action — if blank or import beats it, reconsider the layout hierarchy",
+    "cover_letter_gap": "cover_download / resume_download ratio — currently ~3.8%. Goal: push above 10% via roadmap item 24 (cover letter nudge)",
+    "ai_completion_rate": "generate_with_ai / use_ai_writer ratio — currently ~37%. Low completion = drop-off in the AI dialog flow",
+    "tailor_to_scan": "scan_tailor vs generate_with_ai — separate signals, both should grow as JD input improves (item 22)"
+  }
+}
