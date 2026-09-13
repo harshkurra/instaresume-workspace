@@ -21,13 +21,42 @@
         { "event": "zero_state_bio_upload",        "count": 0, "notes": "Tracking just added — no data yet" },
         { "event": "zero_state_bio_blank",         "count": 0, "notes": "Tracking just added — no data yet" }
       ]
+    },
+    {
+      "date": "2026-09-14",
+      "period": "last_30_days",
+      "notes": "Second snapshot. feat/jd-url-input not yet on production — new jd_tab_*, tailor_dialog_* events absent. zero_state_* events still not appearing (either very low volume or not deployed). GA event names clarified: resume_download=resume_download_click, scan_tailor=scan_btn_tailor_resume_scroll_stepper, cover_download=cover_download_click.",
+      "events": [
+        { "event": "resume_download_click",                  "count": 5049, "delta_vs_baseline": -149, "notes": "Slight dip vs baseline 30d — within noise, rolling window shifted" },
+        { "event": "use_ai_writer",                          "count": 830,  "delta_vs_baseline": -10,  "notes": "Essentially flat" },
+        { "event": "scan_btn_tailor_resume_scroll_stepper",  "count": 575,  "delta_vs_baseline": -56,  "notes": "Down ~9% — may reflect window shift not real drop" },
+        { "event": "generate_with_ai",                       "count": 272,  "delta_vs_baseline": -37,  "notes": "Down slightly — AI completion rate 272/830 = 33% vs 37% baseline. Worth watching." },
+        { "event": "cover_download_click",                   "count": 214,  "delta_vs_baseline": +15,  "notes": "UP +7.5% — small positive signal. Ratio: 214/5049 = 4.2% (was 3.8%). Slowly closing gap." },
+        { "event": "find_job_description_on_google",         "count": 190,  "delta_vs_baseline": null, "notes": "New to tracking. Old event for 'Generate from title' tab. ~6.3 clicks/day." },
+        { "event": "generate_with_jd",                       "count": 169,  "delta_vs_baseline": null, "notes": "New to tracking. JD-based generation completions. 169/190 = 89% conversion from JD search to generation." }
+      ]
+    },
+    {
+      "date": "2026-09-14",
+      "period": "last_7_days (Sep 7–13)",
+      "notes": "Weekly snapshot for trend velocity. New jd_tab_*, tailor_dialog_* events absent = feat/jd-url-input not yet on prod.",
+      "events": [
+        { "event": "resume_download_click",                  "count": 1187, "notes": "~170/day. Pro-rated 30d baseline: ~1215/week — flat." },
+        { "event": "use_ai_writer",                          "count": 195,  "notes": "~28/day." },
+        { "event": "scan_btn_tailor_resume_scroll_stepper",  "count": 120,  "notes": "~17/day." },
+        { "event": "generate_with_ai",                       "count": 58,   "notes": "AI completion rate this week: 58/195 = 30% — lower than 30d avg of 33%. Possible noise." },
+        { "event": "cover_download_click",                   "count": 38,   "notes": "Cover ratio this week: 38/1187 = 3.2% — below the 30d 4.2%. Volatile at these volumes." },
+        { "event": "find_job_description_on_google",         "count": 33,   "notes": "~5/day." },
+        { "event": "generate_with_jd",                       "count": 29,   "notes": "~4/day." }
+      ]
     }
   ],
   "how_to_update": "Ask Claude: 'Pull the last 30 days GA4 data for the events in docs/event-log.json and add a new snapshot entry.' Claude will use the GA4 MCP server to fetch live counts and append a new dated entry.",
   "what_to_watch": {
-    "zero_state_funnel": "zero_state_resume_create_ai should be the dominant zero-state action — if blank or import beats it, reconsider the layout hierarchy",
-    "cover_letter_gap": "cover_download / resume_download ratio — currently ~3.8%. Goal: push above 10% via roadmap item 24 (cover letter nudge)",
-    "ai_completion_rate": "generate_with_ai / use_ai_writer ratio — currently ~37%. Low completion = drop-off in the AI dialog flow",
-    "tailor_to_scan": "scan_tailor vs generate_with_ai — separate signals, both should grow as JD input improves (item 22)"
+    "zero_state_funnel": "zero_state_resume_create_ai should be the dominant zero-state action — if blank or import beats it, reconsider the layout hierarchy. Still at 0 — may not be deployed to prod.",
+    "cover_letter_gap": "cover_download / resume_download ratio — was 3.8%, now 4.2% (30d). Goal: push above 10% via roadmap item 24 (cover letter nudge). Tiny improvement.",
+    "ai_completion_rate": "generate_with_ai / use_ai_writer — was 37% baseline, now 33% (30d), 30% (7d). Slight downward trend — watch for another week before acting.",
+    "jd_feature_adoption": "jd_tab_fetch_link, jd_fetch_success, tailor_dialog_step_view all absent — feat/jd-url-input not yet on prod. Check after deploy.",
+    "tailor_to_scan": "scan_btn_tailor_resume_scroll_stepper 575 (30d). generate_with_jd 169 (30d) — new signal once JD feature ships."
   }
 }
