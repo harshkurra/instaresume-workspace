@@ -101,6 +101,38 @@ const TOOLS = [
       required: ['boardID', 'authorID', 'title'],
     },
   },
+  {
+    name: 'canny_list_entries',
+    description: 'List changelog entries. Useful for reviewing what has already been announced.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max entries to return (default 10, max 100)' },
+        skip:  { type: 'number', description: 'Offset for pagination (default 0)' },
+        type:  { type: 'string', description: 'Filter by type: new | improved | fixed (optional)' },
+      },
+    },
+  },
+  {
+    name: 'canny_create_entry',
+    description:
+      'Create a new changelog entry (product update / release note). ' +
+      'Use type "new" for new features, "improved" for enhancements, "fixed" for bug fixes. ' +
+      'Details supports markdown. Pass published: true to publish immediately, or omit to save as draft.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title:       { type: 'string',  description: 'Short headline for the changelog entry' },
+        details:     { type: 'string',  description: 'Full description in markdown (supports **bold**, bullet lists, etc.)' },
+        type:        { type: 'string',  description: 'Entry type: new | improved | fixed' },
+        published:   { type: 'boolean', description: 'true = publish immediately, false/omit = draft' },
+        scheduledFor:{ type: 'string',  description: 'ISO 8601 date string to schedule publishing (optional)' },
+        postIDs:     { type: 'array',   items: { type: 'string' }, description: 'Canny post IDs to link to this entry (optional)' },
+        labelIDs:    { type: 'array',   items: { type: 'string' }, description: 'Label IDs to attach (optional)' },
+      },
+      required: ['title', 'type'],
+    },
+  },
 ];
 
 // ── Tool handlers ────────────────────────────────────────────────────────────
@@ -151,6 +183,36 @@ async function callTool(name, args) {
       const res = await cannyRequest('posts/create', args);
       if (res.error) throw new Error(res.error);
       return res;
+    }
+
+    case 'canny_list_entries': {
+      const { limit = 10, skip = 0, type } = args;
+      const params = { limit, skip };
+      if (type) params.type = type;
+      const res = await cannyRequest('entries/list', params);
+      if (res.error) throw new Error(res.error);
+      return (res.entries || []).map((e) => ({
+        id:          e.id,
+        title:       e.title,
+        type:        e.type,
+        status:      e.status,
+        publishedAt: e.publishedAt,
+        url:         e.url,
+        details:     e.markdownDetails ? e.markdownDetails.slice(0, 300) : '',
+        reactionCount: e.reactionCount,
+      }));
+    }
+
+    case 'canny_create_entry': {
+      const { title, details, type, published = false, scheduledFor, postIDs, labelIDs } = args;
+      const params = { title, type, published };
+      if (details)      params.markdownDetails = details;
+      if (scheduledFor) params.scheduledFor    = scheduledFor;
+      if (postIDs?.length)  params.postIDs  = postIDs;
+      if (labelIDs?.length) params.labelIDs = labelIDs;
+      const res = await cannyRequest('entries/create', params);
+      if (res.error) throw new Error(res.error);
+      return { id: res.id, url: res.url, status: res.status, title: res.title };
     }
 
     default:
