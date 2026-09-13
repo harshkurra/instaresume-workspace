@@ -12,3 +12,5 @@ config/gcloud/*.json
 
 # macOS
 .DS_Store
+config/canny-api-key
+.mcp.json

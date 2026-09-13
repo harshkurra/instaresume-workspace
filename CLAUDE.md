@@ -56,24 +56,29 @@ Each repo has its own `CLAUDE.md` with full details. Read the relevant one(s) wh
 | Production | Firebase Hosting (`firebase use prod`) | `gcloud app deploy` (app.yaml) | `instaresume-backend` |
 | Staging | Firebase Hosting (`firebase use dev`) | `gcloud app deploy app.staging.yaml` | `resume-builder-d9cb3` |
 
+## MCP Integrations
+
+The workspace has MCP servers configured in `.mcp.json` (gitignored — machine-local). They let Claude query live data from external services directly in the conversation without manual exports. All servers start automatically when you open this workspace in Claude Code.
+
+---
+
 ## Google Analytics 4 MCP
 
-The workspace has a GA4 MCP server configured in `.mcp.json`. It connects to the instaresume.io GA4 property via a service account and lets Claude pull live usage data directly in the conversation — no manual export needed.
+Connects to the instaresume.io GA4 property via a service account. Use it to pull live usage data and make data-driven product decisions.
 
 ### Setup
 
-The MCP server runs automatically when you open this workspace in Claude Code. It requires a service account key at:
+Requires a service account key at:
 
 ```
-config/gcloud/analytics-sa.json
+config/gcloud/analytics-sa.json   ← gitignored, never commit
 ```
 
-This file is gitignored. To set it up on a new machine:
-1. Go to Google Cloud Console → IAM & Admin → Service Accounts
-2. Find the analytics service account and download a JSON key
-3. Place the file at `config/gcloud/analytics-sa.json`
-
-The server uses `pipx run analytics-mcp` (official Google package). If `pipx` is not installed: `brew install pipx && pipx ensurepath`.
+To set it up on a new machine:
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → IAM & Admin → Service Accounts
+2. Find the analytics service account (`analytics-mcp@...`) and download a JSON key
+3. Place it at `config/gcloud/analytics-sa.json`
+4. The server uses `pipx run analytics-mcp` (official Google package). If `pipx` is missing: `brew install pipx && pipx ensurepath`
 
 ### GA4 Property
 
@@ -82,40 +87,90 @@ The server uses `pipx run analytics-mcp` (official Google package). If `pipx` is
 
 ### How to use it
 
-Ask Claude to pull data in plain English. Claude will call `mcp__google-analytics__run_report` automatically.
-
-**Useful prompts while deciding roadmap items:**
+Ask Claude in plain English — it calls `mcp__google-analytics__run_report` automatically.
 
 ```
 # Top events in the last 30 days
 What are the top 10 user events in GA4 over the last 30 days?
 
-# Compare two features by usage
+# Compare feature usage
 How many times was 'use_ai_writer' vs 'generate_with_ai' fired last month?
 
-# Funnel: did users who viewed a feature actually use it?
-Show me events starting with 'scan_' over the last 30 days, grouped by event name.
+# Funnel analysis
+Show me the tailor dialog funnel: tailor_dialog_step_view by stepName for last 30 days.
+
+# JD fetch error breakdown
+What are the jd_fetch_error counts grouped by reason param in the last 7 days?
 
 # Traffic by page
 Which pages get the most views this month?
 
-# User counts by country
+# Top countries
 What are the top countries by active users in the last 7 days?
 ```
 
-**While working on a feature**, ask things like:
-- "What's the drop-off between resume_download and cover_download events?" → informs conversion improvements
-- "How many users hit use_ai_writer but not generate_with_ai?" → helps debug AI flow adoption
-- "Show page views for /resume-builder vs /cover-letter-builder over last 90 days" → informs where to invest
+**While working on a feature:**
+- "What's the drop-off between resume_download and cover_download?" → conversion gap
+- "Show tailor_dialog_abandoned grouped by stepName" → where users quit the tailor flow
+- "How many jd_tab_fetch_link vs jd_tab_paste_text events last 7 days?" → which JD input method users prefer
 
-### Key events (as of 2026-09-06, last 30 days)
+### Key events tracked
 
-| Event | Count | What it means |
-|---|---|---|
-| `resume_download` | 5,198 | PDF downloaded |
-| `use_ai_writer` | 840 | AI writer panel opened |
-| `scan_tailor` | 631 | ATS/tailor scan started |
-| `generate_with_ai` | 309 | AI generation completed |
-| `cover_download` | 199 | Cover letter PDF downloaded |
+| Event | What it means |
+|---|---|
+| `resume_download` | PDF downloaded |
+| `use_ai_writer` | AI writer panel opened |
+| `scan_tailor` | ATS/tailor scan started |
+| `generate_with_ai` | AI generation completed |
+| `cover_download` | Cover letter PDF downloaded |
+| `jd_tab_fetch_link` | User chose "Fetch from link" tab |
+| `jd_tab_generate_from_title` | User chose "Generate from title" tab |
+| `jd_tab_paste_text` | User chose "Paste text" tab |
+| `jd_fetch_success` | JD extracted from URL successfully |
+| `jd_fetch_error` | JD URL fetch failed (params: `reason`) |
+| `tailor_dialog_step_view` | User landed on a tailor dialog step (params: `step`, `stepName`) |
+| `tailor_dialog_abandoned` | User closed tailor dialog before generating (params: `atStep`, `stepName`) |
 
-The 25× gap between `resume_download` and `cover_download` is what drove roadmap item 24 (cover letter nudge).
+---
+
+## Canny MCP
+
+Connects to the Canny customer feedback board. Use it to read feature requests, check top-voted posts, and create new posts — without leaving the editor.
+
+### Setup
+
+Requires a Canny API key. To configure:
+
+1. Go to [Canny Settings → API](https://instaresume.canny.io/admin/settings/api) and copy your API key
+2. Open `.mcp.json` in the workspace root and replace `YOUR_CANNY_API_KEY_HERE` with the actual key
+3. Restart Claude Code to pick up the change
+
+The server runs as a local Node.js script at `config/canny-mcp.js` — no external dependencies, no install step.
+
+### How to use it
+
+```
+# See all boards
+List all Canny boards.
+
+# Read top feature requests
+Show me the top 10 open posts on the <board name> board sorted by votes.
+
+# Check planned items
+List all posts with status "planned" on the feedback board.
+
+# Read a specific post
+Get Canny post <id>.
+
+# Create a feature request
+Create a Canny post titled "..." with details "..." on board <id>.
+```
+
+### Tools available
+
+| Tool | What it does |
+|---|---|
+| `canny_list_boards` | List all boards with post counts |
+| `canny_list_posts` | List posts — filter by board, status, or search term |
+| `canny_get_post` | Fetch full post details by ID |
+| `canny_create_post` | Create a new feature request post |
