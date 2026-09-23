@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "cloudflare": {
+      "command": "npx",
+      "args": ["-y", "@cloudflare/mcp-server-cloudflare", "run", "8eda72d72824645740a5119c62956461"],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "YOUR_CLOUDFLARE_API_TOKEN_HERE"
+      }
+    },
+    "google-analytics": {
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/absolute/path/to/claude_code/config/gcloud/analytics-sa.json"
+      }
+    },
+    "canny": {
+      "command": "node",
+      "args": ["/absolute/path/to/claude_code/config/canny-mcp.js"],
+      "env": {
+        "CANNY_API_KEY": "YOUR_CANNY_API_KEY_HERE"
+      }
+    }
+  }
+}
