@@ -1,0 +1,62 @@
+{
+  "description": "GA4 event count log — snapshot the key events periodically to measure whether product changes are moving the numbers. Add a new entry under each event every time you pull data. Compare against the previous entry to see trend.",
+  "property_id": "330273037",
+  "snapshots": [
+    {
+      "date": "2026-09-06",
+      "period": "last_30_days",
+      "notes": "Baseline snapshot — pulled via GA4 MCP. Zero state events not yet live (tracking added on this date). Tailor dialog alert bug fixed. JD char limit raised to 3000 for all users.",
+      "events": [
+        { "event": "resume_download",          "count": 5198, "notes": "Core activation metric" },
+        { "event": "use_ai_writer",             "count": 840,  "notes": "AI writer panel opened" },
+        { "event": "scan_tailor",               "count": 631,  "notes": "ATS/tailor scan started" },
+        { "event": "generate_with_ai",          "count": 309,  "notes": "AI generation completed" },
+        { "event": "cover_download",            "count": 199,  "notes": "Cover letter PDF downloaded — 25× gap vs resume_download drove roadmap item 24" },
+        { "event": "zero_state_resume_create_ai",  "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_import",     "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_from_role",  "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_resume_blank",      "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_cover_create_ai",   "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_cover_blank",       "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_bio_upload",        "count": 0, "notes": "Tracking just added — no data yet" },
+        { "event": "zero_state_bio_blank",         "count": 0, "notes": "Tracking just added — no data yet" }
+      ]
+    },
+    {
+      "date": "2026-09-14",
+      "period": "last_30_days",
+      "notes": "Second snapshot. feat/jd-url-input shipped to prod on 2026-09-13 — jd_tab_*, tailor_dialog_* events will appear in next snapshot once users hit the new flows. zero_state_* events not yet appearing (very low volume or still ramping). GA event name map: resume_download→resume_download_click, scan_tailor→scan_btn_tailor_resume_scroll_stepper, cover_download→cover_download_click. IMPORTANT: use_ai_writer and generate_with_ai are NOT a conversion funnel — they are two separate actions in the same inline AI writer flow (use_ai_writer = button clicked in editor, generate_with_ai = Generate clicked inside that dialog). Do not compute a rate between them.",
+      "events": [
+        { "event": "resume_download_click",                  "count": 5049, "delta_vs_baseline": -149, "notes": "Slight dip vs baseline 30d — within noise, rolling window shifted by 8 days" },
+        { "event": "use_ai_writer",                          "count": 830,  "delta_vs_baseline": -10,  "notes": "Inline AI writer button clicks in the builder editor. Essentially flat." },
+        { "event": "scan_btn_tailor_resume_scroll_stepper",  "count": 575,  "delta_vs_baseline": -56,  "notes": "ATS/tailor scan starts. Down ~9% — likely window shift, not a real drop." },
+        { "event": "generate_with_ai",                       "count": 272,  "delta_vs_baseline": -37,  "notes": "Generate clicked inside inline AI writer dialog — same flow as use_ai_writer, NOT a separate feature. Down slightly." },
+        { "event": "cover_download_click",                   "count": 214,  "delta_vs_baseline": +15,  "notes": "UP +7.5%. Ratio: 214/5049 = 4.2% (was 3.8%). Slowly closing gap toward 10% goal." },
+        { "event": "find_job_description_on_google",         "count": 190,  "delta_vs_baseline": null, "notes": "Old event for 'Generate from title' tab click. ~6/day." },
+        { "event": "generate_with_jd",                       "count": 169,  "delta_vs_baseline": null, "notes": "Tailor to JD flow completion. ~5.6/day." }
+      ]
+    },
+    {
+      "date": "2026-09-14",
+      "period": "last_7_days (Sep 7–13)",
+      "notes": "Weekly velocity snapshot. feat/jd-url-input shipped Sep 13 so new events (jd_tab_*, tailor_dialog_*) will appear in next week's snapshot.",
+      "events": [
+        { "event": "resume_download_click",                  "count": 1187, "notes": "~170/day. Pro-rated from baseline: ~1215/week — flat." },
+        { "event": "use_ai_writer",                          "count": 195,  "notes": "~28/day. Inline AI writer opens." },
+        { "event": "scan_btn_tailor_resume_scroll_stepper",  "count": 120,  "notes": "~17/day." },
+        { "event": "generate_with_ai",                       "count": 58,   "notes": "~8/day. Generate clicks inside AI writer dialog (same flow as use_ai_writer)." },
+        { "event": "cover_download_click",                   "count": 38,   "notes": "Cover ratio this week: 38/1187 = 3.2% — volatile at these volumes, watch 30d trend." },
+        { "event": "find_job_description_on_google",         "count": 33,   "notes": "~5/day." },
+        { "event": "generate_with_jd",                       "count": 29,   "notes": "~4/day. Tailor to JD completions." }
+      ]
+    }
+  ],
+  "how_to_update": "Ask Claude: 'Pull the last 30 days GA4 data for the events in docs/event-log.json and add a new snapshot entry.' Claude will use the GA4 MCP server to fetch live counts and append a new dated entry.",
+  "what_to_watch": {
+    "zero_state_funnel": "zero_state_resume_create_ai should be the dominant zero-state action. Still at 0 — check next snapshot.",
+    "cover_letter_gap": "cover_download_click / resume_download_click ratio — was 3.8%, now 4.2% (30d). Goal: push above 10% via roadmap item 24.",
+    "jd_feature_adoption": "jd_tab_fetch_link, jd_fetch_success, tailor_dialog_step_view — feat/jd-url-input shipped Sep 13, expect data next week.",
+    "generate_with_jd": "Tailor to JD completions — 169 (30d), 29 (7d). Primary success metric for the new tailor flow.",
+    "note_on_ai_events": "use_ai_writer and generate_with_ai are two actions in the SAME inline AI writer flow — do not compute a conversion rate between them."
+  }
+}
